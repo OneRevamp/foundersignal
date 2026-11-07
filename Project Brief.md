@@ -1,7 +1,7 @@
 # Founder Signal — Project Brief
-## v2.0 — Local-First, Zero-Server, Mobile-Only
+## v3.0 — Local-First Progressive Web App
 
-This document is the single source of truth for the project. Any AI coding assistant (Jules, Claude, etc.) working on this repo should read this file before starting any task.
+This document is the single source of truth for the project. Read it before starting any implementation task.
 
 ---
 
@@ -26,124 +26,124 @@ Large whitespace. Comfortable typography. Minimal colors. Warm neutral backgroun
 
 ---
 
-# 2. The Core Architectural Decision: Zero-Server, Local-First
+# 2. Core Architecture: Zero-Server, Local-First PWA
 
-**There is no backend.** No Firebase, no accounts, no login, no cloud database. All user data — Reflections, Attention logs, Deep Work sessions, Archive — lives exclusively on the user's device.
+**There is no backend.** No accounts, no login, no cloud database. All user data — Reflections, Attention logs, Deep Work sessions, Archive — lives exclusively in the user's browser on that device.
 
 ### Why
-- It's the honest, literal version of "we have no access to your data" — not a policy promise, an architectural fact.
-- It mirrors the product's own philosophy: the app doesn't want to own the user's attention *or* their data.
-- It's also the cheapest possible build — no backend hosting, no auth, no database costs, no compliance overhead for storing personal reflections.
+- The product's promise that we have no access to user data is an architectural fact, not merely a policy statement.
+- The app does not want to own the user's attention or their data.
+- There are no backend hosting, authentication, database, or compliance costs for storing personal reflections.
 
 ### What this means concretely
-- **Storage:** local SQLite via Drift (Flutter package). All app data lives in a database file on-device.
-- **Accounts:** none. Optional device-level PIN/Face ID/Touch ID app lock, not an account system.
-- **Sync:** none for MVP. Single device only. (Explicitly deferred — see Section 6.)
-- **Backup:** user-initiated only. An "Export my data" button writes an encrypted file via the OS share sheet to wherever the user chooses (their own iCloud/Drive/Files). The app never sees or stores this file after export. Reinstall = manual re-import.
-- **Content delivery (Daily Signal, Learning Library):** read-only, anonymous fetch of a static content file (e.g., hosted free on GitHub Pages). This is a one-way pull with zero user data ever transmitted — it doesn't compromise the no-data promise.
-- **No AI features.** Weekly Review and all other "insight" features are rules-based templates computed entirely on-device, not LLM-generated. This is a permanent product decision, not a cost-cutting MVP shortcut — it keeps the product calm, predictable, and true to the "less intrusive, more natural" feel the founder wants.
+- **Application:** React + TypeScript + Vite, responsive desktop-first PWA.
+- **Local storage:** IndexedDB through Dexie. All personal records and cached editorial content remain in the browser profile on the device.
+- **Accounts:** none. No account or cross-device identity system.
+- **Sync:** none for MVP. Data is browser-profile and device specific.
+- **Backup:** user-initiated export/import is planned for a later phase. Browser storage can be cleared by the user or browser; the app must explain this limitation before backup is introduced.
+- **Content delivery:** Daily Signal and Learning Library may use anonymous, read-only fetches of published static JSON. No user data, identifiers, or personal content may be sent.
+- **Offline:** a service worker caches the app shell and static assets. Previously fetched editorial content is stored locally in IndexedDB. Core features must remain useful without a network connection.
+- **No AI features:** insights are rules-based and computed locally. No LLM-generated narratives or AI provider calls.
+
+### Browser privacy and storage boundaries
+
+Local browser storage is private to the browser profile on the device, but it is not equivalent to an encrypted native database. Other browser-profile users, device administrators, extensions with sufficient permissions, or someone with access to an unlocked device may have ways to access it. Do not promise encryption at rest unless it is implemented and reviewed. Browser data may be removed when site data is cleared; storage persistence is best-effort and browser-dependent.
 
 ---
 
-# 3. Product Pillars (Updated)
+# 3. Product Pillars
 
 ## Daily Signal
-Short daily article (2-5 min read), one practical action at the end. Delivered via static content fetch (Section 2). Also published publicly (LinkedIn etc.) as marketing — see Section 8.
+Short daily article (2–5 min read), one practical action at the end. Delivered via anonymous static content fetch. Also published publicly as marketing content.
 
 ## Reflection
 Guided prompts (What mattered today? What decision did I avoid? etc.). Saved locally. Feeds the Archive.
 
-## Attention (now automatic, not manual)
-Uses native OS APIs to measure real app/category usage instead of self-reporting:
-
-- **Android:** `UsageStatsManager` (via `PACKAGE_USAGE_STATS` permission, granted once in system settings) gives real per-app usage data directly to the app — rich, named, minute-level detail.
-- **iOS:** Apple's Screen Time API (`FamilyControls` + `DeviceActivity` + `ManagedSettings`). Important platform constraint: **raw per-app usage data is never exposed to the main app's code on iOS** — it's only renderable inside a sandboxed system extension. The main app can request authorization, let the user pick categories to monitor, set enforcement (shields/limits via `ManagedSettings`), and react to threshold-crossed events — but cannot build custom analytics from raw named numbers the way Android allows.
-- Practical implication: Android gets rich real-usage insight; iOS gets enforcement + threshold nudges with coarser insight. Product copy and onboarding should be honest about this platform difference rather than promising identical experiences.
-
-User sets intentional budgets per category (AI, Social, News, etc.) — not hard limits. When exceeded: a calm nudge, never a shame UI. "Is this still helping you?"
+## Attention
+A reflective view of intentional time spent within Founder Signal, plus user-entered context and budgets. A PWA cannot read system-wide app usage, inspect other apps, or access native Android UsageStatsManager / iOS Screen Time data. Never present browser activity as a complete picture of device attention. Calm prompts, never shame.
 
 ## Deep Work
-Distraction-free timer. Optional ambient sound (royalty-free/CC0 loops only). Daily objective field. No streaks, no unnecessary stats.
+Distraction-free in-app timer. The timer can track elapsed time while the app is open; background/suspended-tab behavior varies by browser. Do not rely on guaranteed background execution or notifications.
 
 ## Learning Library
-Five-minute lessons across leadership, marketing, decision-making, negotiation, finance, brand strategy, psychology, communication, systems thinking. Delivered via the same static content fetch as Daily Signal.
+Five-minute lessons across leadership, marketing, decision-making, negotiation, finance, brand strategy, psychology, communication, and systems thinking. Delivered via the same static content fetch as Daily Signal.
 
 ## Weekly Review
-Rules-based (not AI-generated) narrative summary built entirely from local on-device data. E.g.: "Your strongest deep work happened between 8-10am. Attention drifted toward Instagram most on Wednesdays." Computed and rendered on-device, nothing transmitted anywhere.
+Rules-based narrative summary built entirely from local Reflection, Attention, and Deep Work data. Nothing is transmitted.
 
 ## Founder Journey
-Meaningful stages (Explorer → Builder → Operator → Leader → Strategist → Mentor) based on real actions completed, not streaks or XP. Understated UI — a label change, not a celebration animation.
+Meaningful stages (Explorer → Builder → Operator → Leader → Strategist → Mentor) based on real actions completed, not streaks or XP. Understated UI treatment.
 
 ## The Archive
-Unified, searchable (local SQLite full-text search) view of all Signals read, Reflections written, Lessons completed, Weekly Reviews generated.
+Unified, searchable local view of Signals read, Reflections written, Lessons completed, and Weekly Reviews generated.
 
 ---
 
-# 4. Tech Stack
+# 4. Technology
 
 | Layer | Choice | Notes |
 |---|---|---|
-| Framework | Flutter | Free, open-source, no licensing cost at any scale |
-| State management | Riverpod | Less boilerplate than Bloc, more testable than plain Provider |
-| Local database | Drift (SQLite) | Mature, well-supported local-first Flutter package |
-| Local notifications | flutter_local_notifications | Scheduled, on-device only — nothing pushed from a server |
-| Android usage data | `usage_stats` plugin / native platform channel to `UsageStatsManager` | Requires `PACKAGE_USAGE_STATS` permission |
-| iOS usage data | Native platform channel to `FamilyControls` / `DeviceActivity` / `ManagedSettings` | Requires Family Controls entitlement from Apple |
-| Content delivery | Static JSON fetch from a free-hosted source (GitHub Pages) | Read-only, anonymous, no user data sent |
-| CI/CD | Skip for MVP | Add GitHub Actions free tier later if needed |
+| Application | React + TypeScript + Vite | Responsive desktop-first web app |
+| PWA | Web App Manifest + Service Worker / Workbox | Installable where supported; offline app shell |
+| Local database | IndexedDB via Dexie | Browser-local records and editorial cache |
+| Content delivery | Anonymous static JSON fetch | Read-only; no user data sent |
+| Testing | TypeScript checks + focused browser tests | Add automation as features mature |
+| Hosting | Static hosting | No application server or API required |
 
-**Explicitly not used:** Firebase, any backend server, any AI provider SDK, any analytics SDK that phones home.
+**Explicitly not used:** Firebase, backend servers, cloud databases, authentication providers, analytics SDKs that phone home, AI provider SDKs, or user-data sync.
 
 ---
 
 # 5. Phased Build Plan
 
-## Phase 0 — Foundation
-- Flutter project scaffold, mobile only (iOS + Android)
-- Riverpod set up
-- Drift database schema: Reflections, AttentionLogs, DeepWorkSessions, Signals (cached), Lessons (cached), WeeklyReviews
-- Folder structure by isolated feature module: reflection, attention, deep_work, signal, library, review, journey, settings
-- App-level lock screen (optional PIN/biometric) — device-level, not account-level
-- No auth, no Firebase, no network calls except the static content fetch stub
+## Phase 0 — PWA Foundation
+- React + TypeScript + Vite scaffold
+- Responsive desktop-first application shell and feature navigation
+- Dexie / IndexedDB schema for Reflections, AttentionLogs, DeepWorkSessions, Signals, Lessons, WeeklyReviews
+- Web app manifest, service worker, app icons, offline app-shell support
+- Feature-oriented modules and shared styling
+- No auth, backend, analytics, or personal-data network calls
 
-**Definition of done:** app builds on a real device, empty shell navigation exists, local DB reads/writes work.
+**Definition of done:** production build and type checks pass; PWA manifest and service worker are generated; shell adapts to desktop and mobile; local database opens successfully.
 
 ## Phase 1 — Daily Signal (content pipeline)
-- Static JSON content file format defined (title, body, category, action-item, publish date)
-- Fetch + local cache logic (works offline after first fetch)
+- Static JSON content file format defined (id, title, body, category, action item, publish date)
+- Anonymous read-only fetch + local IndexedDB cache (works offline after first fetch)
 - Home screen renders today's Signal
 - Archive list of past Signals
 
 ## Phase 2 — Reflection
-- 3-4 guided prompts, saved to local Drift DB
+- 3–4 guided prompts, saved to local IndexedDB
 - Entry list view
 
-## Phase 3 — Attention (the hard phase — native integration)
-- Android: implement `UsageStatsManager` platform channel, permission request flow, category mapping
-- iOS: implement `FamilyControls` authorization flow, category picker (`FamilyActivityPicker`), threshold event handling via `DeviceActivity`
-- Budget-setting UI (non-punitive copy only)
-- **Flag for extra review time** — most technically complex phase, platform-specific, less AI-assistant-reliable than the rest
+## Phase 3 — Attention (browser-appropriate scope)
+- In-app focus/attention sessions and user-entered context
+- Category budgets and calm reflection prompts
+- Clear explanation that the PWA cannot measure whole-device or other-app usage
+- No native usage-statistics or Screen Time integration in the web app
 
 ## Phase 4 — Deep Work
-- Distraction-free timer, optional ambient sound, daily objective field
+- Distraction-free timer and daily objective field
+- Elapsed-time handling that remains honest when tabs are suspended or closed
+- Optional ambient sound only from royalty-free / CC0 sources
 
 ## Phase 5 — Weekly Review
 - Rules-based template engine pulling from local Reflection + Attention + Deep Work data
-- No AI/LLM calls anywhere in this phase
+- No AI/LLM calls
 
 ## Phase 6 — Learning Library + Archive Search
-- Static content fetch (same pipeline as Signal)
-- Local SQLite full-text search across all content types
+- Static content fetch using the same pipeline as Signal
+- Local search across all content types
 
 ## Phase 7 — Founder Journey
 - Stage progression logic based on completed actions
 - Understated UI treatment
 
-## Phase 8 — Polish, Export/Backup, Store Prep
-- "Export my data" encrypted-file flow via OS share sheet
-- Local notification copy pass (calm, max 1-2/day)
-- App Store / Play Store listings, screenshots, privacy policy (genuinely simple to write given zero data collection)
-- TestFlight + Play Internal Testing with 15-30 people from founder's existing network
+## Phase 8 — Polish, Export/Backup, and Release Prep
+- User-initiated local export/import with clear security and browser-storage caveats
+- Optional browser notifications only where supported and only as a nonessential enhancement
+- Responsive, accessibility, privacy, offline, and cross-browser review
+- Static hosting and PWA installation guidance
 
 **MVP ends here. No further phases planned until post-beta feedback.**
 
@@ -151,12 +151,13 @@ Unified, searchable (local SQLite full-text search) view of all Signals read, Re
 
 # 6. Explicitly Deferred / Cut
 
-- Multi-device sync — cut for MVP; if ever revisited, must preserve zero-knowledge encryption (server, if any, must never be able to read data)
-- Web dashboard — mobile-only
+- Multi-device sync — cut for MVP
+- Native iOS / Android applications — not part of this PWA build
+- System-wide app usage monitoring — unavailable to ordinary PWAs
 - Browser extension — cut
-- AI-generated narratives / any AI provider integration — cut permanently, not deferred
-- Payments/Stripe — add only if/when there's something worth charging for
-- True per-user self-hosting (user runs own server) — possible future power-user option, not required for MVP
+- AI-generated narratives / any AI provider integration — cut permanently
+- Payments — only revisit if/when there is something worth charging for
+- True per-user self-hosting — not required for MVP
 
 ---
 
@@ -164,37 +165,26 @@ Unified, searchable (local SQLite full-text search) view of all Signals read, Re
 
 | Item | Cost |
 |---|---|
-| Flutter, Dart, Drift, Riverpod, all packages | Free |
-| Local dev tools (VS Code/Android Studio) | Free |
-| GitHub (private repo) | Free |
-| Static content hosting (GitHub Pages) | Free |
-| Royalty-free ambient sounds | Free |
-| Privacy policy generator | Free |
-| Apple Developer Program | $99/year |
-| Google Play Developer account | $25 one-time |
-| Domain (optional, for landing page) | ~$15-20/year |
-| **Total to public beta, both platforms** | **~$140 one-time, no recurring backend cost** |
-
-No AI API costs, ever, under this architecture. No hosting costs, ever, at any user scale, since there's no backend to scale.
+| React, TypeScript, Vite, Dexie | Free, open source |
+| Static hosting | Free tiers available |
+| Static editorial content | Can be hosted with the app or on a static public source |
+| Backend / database / auth | None |
 
 ---
 
-# 8. Promotion (Zero Budget)
+# 8. Promotion
 
-1. **Publish Daily Signal articles publicly now**, before the app exists — LinkedIn, or folded into the existing "Human in the Room" / "The Signal" content strategy. Builds an audience and content backlog for free.
-2. **Beta list from existing network** — founders, agencies, creative directors already in the founder's orbit.
-3. **Self-run Product Hunt launch** — the "we don't want your attention *or* your data" narrative is strong, differentiated Product Hunt material.
-4. **Manifesto landing page** — this document, cleaned into a public one-pager. Free to host.
-5. **Shareable Weekly Reviews** — a "copy as text" export of the local weekly narrative, zero-cost organic loop.
-
-No paid user acquisition until real retention data justifies it.
+1. Publish Daily Signal articles publicly before launch to build a content backlog.
+2. Invite a small beta group of founders and creators from the existing network.
+3. Position the product around the promise: "we don't want your attention or your data."
+4. Keep the product experience calm, useful, and free of engagement-maximizing mechanics.
 
 ---
 
-# 9. Working With AI Coding Assistants (Jules)
+# 9. Working With AI Coding Assistants
 
-- Jules is async: give it one scoped phase as a task, it clones the repo, plans, implements, tests, and opens a PR. Review the PR like a teammate's before merging.
-- One phase = one task. Don't queue multiple phases in parallel.
-- Phase 3 (Attention/native platform integration) needs the most human review — native permission APIs are exactly the kind of "ambiguous, undocumented system coordination" work async agents handle less reliably.
-- Architecture or UX judgment calls should be resolved in conversation first, then handed to Jules as a concrete, unambiguous brief.
-- See `AGENTS.md` for standing rules Jules should follow on every task.
+- Read this brief and `Agents` before each task.
+- Work on one phase per task; do not queue multiple phases in parallel.
+- Review every pull request before merging.
+- Browser limitations are product constraints, not implementation bugs to work around.
+- Resolve architectural or UX ambiguity in conversation before implementation.

@@ -1,17 +1,17 @@
 # Agent Rules — Founder Signal
 
-Read `PROJECT_BRIEF.md` in full before starting any task in this repo. These rules apply to every task, every phase.
+Read `Project Brief.md` in full before starting any task in this repo. These rules apply to every task, every phase.
 
 ## Non-negotiables
-1. **No backend.** Do not add Firebase, any server, any cloud database, any auth system, or any AI/LLM SDK to this project under any circumstances, even if it seems like the easiest way to implement a requested feature. If a task seems to require one, stop and flag it instead of implementing it.
-2. **All user data stays local.** Every read/write of Reflections, Attention logs, Deep Work sessions, or any personal content must go through the local Drift database only. No network call should ever transmit user-generated content.
-3. **The only permitted network calls** are: (a) the read-only, anonymous static content fetch for Daily Signal / Learning Library, and (b) nothing else. If you're about to write a network call that isn't (a), stop.
-4. **No gamification.** No streaks, no XP counters, no confetti, no red warning bars, no urgent-toned copy. Check any UI/copy change against the brand personality section in `PROJECT_BRIEF.md` before implementing.
-5. **One phase per task.** Implement only the phase you were assigned. Do not touch files or features belonging to other phases without explicit instruction.
+1. **No backend.** Do not add Firebase, any server, any cloud database, any auth system, or any AI/LLM SDK to this project under any circumstances. If a task seems to require one, stop and flag it instead of implementing it.
+2. **All user data stays local.** Every read/write of Reflections, Attention logs, Deep Work sessions, and personal content must go through the local IndexedDB database only. No network call should ever transmit user-generated content.
+3. **The only permitted application network calls** are anonymous, read-only static content fetches for Daily Signal / Learning Library. The service worker may cache the app's own static build assets for offline use. If you're about to write another application network call, stop.
+4. **No gamification.** No streaks, no XP counters, no confetti, no red warning bars, no urgent-toned copy. Check any UI/copy change against the brand personality in `Project Brief.md` before implementing it.
+5. **One phase per task.** Implement only the phase assigned. Do not touch features belonging to other phases without explicit instruction.
 6. **Modular by feature.** Keep each feature (reflection, attention, deep_work, signal, library, review, journey, settings) in its own isolated module. Shared UI components go in a common module. Business logic stays separate from presentation.
 7. **Readable over clever.** Prefer straightforward, well-named code over dense or "smart" one-liners. Document public interfaces.
 8. **Never redesign existing systems** unless explicitly requested. Never modify unrelated features while completing an assigned task.
-9. **Platform honesty (Attention phase specifically):** Do not implement or imply feature parity between iOS and Android attention-tracking that doesn't actually exist. iOS cannot expose raw per-app usage data to app code — respect that constraint rather than working around it in ways Apple would reject in review.
+9. **Platform honesty.** Do not imply that a browser app can access system-wide per-app usage, native Screen Time data, or unrestricted background activity. Browser notifications, install prompts, and offline behavior vary by browser and operating system.
 
 ## When in doubt
-If a task brief is ambiguous or requires an architectural or UX judgment call not already answered in `PROJECT_BRIEF.md`, do not guess — flag the ambiguity in the PR description rather than making an assumption.
+If a task brief is ambiguous or requires an architectural or UX judgment call not already answered in `Project Brief.md`, do not guess — flag the ambiguity in the PR description rather than making an assumption.

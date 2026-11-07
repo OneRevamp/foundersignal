@@ -1,41 +1,34 @@
 # Founder Signal
 
-A calm, mobile-only companion for protecting attention and improving judgment.
+A calm, responsive, local-first Progressive Web App for protecting attention and improving judgment. Designed desktop-first, with layouts that adapt to tablets and phones. It can be installed from supported browsers and continues to serve its app shell offline after the first successful load.
 
-## Phase 0 foundation
+## Development
 
-This branch establishes the Flutter app shell, Riverpod root scope, local Drift database schema, and feature-oriented navigation structure.
-
-### Requirements
-
-- Flutter SDK (3.22 or newer)
-- Dart SDK (3.4 or newer)
-- Xcode for iOS builds
-- Android Studio / Android SDK for Android builds
-
-### Run locally
+Requirements: Node.js 20.19+ or 22.12+ and npm.
 
 ```sh
-flutter pub get
-dart run build_runner build --delete-conflicting-outputs
-flutter run
+npm install
+npm run dev
 ```
 
-Run checks with:
+Create a production build and run the local checks:
 
 ```sh
-flutter analyze
-flutter test
+npm run typecheck
+npm run build
+npm run preview
 ```
 
-The Drift database is stored in the app's local documents directory. The schema includes Reflections, AttentionLogs, DeepWorkSessions, Signals, Lessons, and WeeklyReviews.
+## Architecture
 
-## Architecture guardrails
+- React + TypeScript + Vite for the application.
+- Dexie / IndexedDB for all user-created and cached content on this device.
+- A service worker and web app manifest provide offline app-shell support and installation where supported.
+- No backend, accounts, authentication, cloud database, analytics SDK, or AI provider SDK.
+- The only permitted application network request is an anonymous, read-only fetch of published static Daily Signal / Learning Library content. Never send reflections, attention logs, sessions, or other personal data over the network.
 
-- No backend, accounts, Firebase, cloud database, analytics SDK, or AI provider SDK.
-- User-created data remains on-device in SQLite through Drift.
-- Any future content delivery is limited to anonymous, read-only static content requests.
-- Feature modules stay isolated under `lib/features/`.
-- Platform-specific attention capabilities must be implemented honestly; iOS does not expose raw per-app usage totals to the main app.
+## Browser capability boundaries
 
-See [Project Brief.md](Project%20Brief.md) for the product requirements and phased roadmap.
+A PWA cannot read system-wide app usage or obtain the native Android `UsageStatsManager` / iOS Screen Time data. Attention features must therefore be based on deliberate in-app/browser interactions and user-entered context, and must not imply whole-device monitoring. Background execution and notifications vary by browser and operating system; core workflows must not depend on them.
+
+See [Project Brief.md](Project%20Brief.md) for the product requirements and revised phased roadmap.

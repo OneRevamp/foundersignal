@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { localDatabase } from './data/database';
 
 type Section = 'Today' | 'Reflection' | 'Attention' | 'Deep Work' | 'Library' | 'Review' | 'Journey' | 'Settings';
@@ -17,9 +17,13 @@ export default function App() {
   const [active, setActive] = useState<Section>('Today');
   const [storageReady, setStorageReady] = useState(false);
 
-  useState(() => {
-    void localDatabase.open().then(() => setStorageReady(true)).catch(() => setStorageReady(false));
-  });
+  useEffect(() => {
+    let mounted = true;
+    void localDatabase.open()
+      .then(() => { if (mounted) setStorageReady(true); })
+      .catch(() => { if (mounted) setStorageReady(false); });
+    return () => { mounted = false; };
+  }, []);
 
   return (
     <div className="app-frame">

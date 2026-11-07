@@ -1,0 +1,22 @@
+# Dart / Flutter
+.dart_tool/
+.packages
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+*.iml
+.idea/
+.vscode/
+.flutter-versions
+# Generated
+**/*.g.dart
+# Platform signing / secrets
+android/key.properties
+android/app/*.jks
+ios/Flutter/Generated.xcconfig
+ios/Runner/GeneratedPluginRegistrant.*
+# OS
+.DS_Store
+Thumbs.db
